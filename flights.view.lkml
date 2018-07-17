@@ -35,6 +35,7 @@ view: flights {
       value: "Yes"
     }
     drill_fields: [route_cities, dep_delay, carriers.nickname, count]
+    value_format_name: decimal_1
   }
 
   measure: count {
@@ -55,7 +56,7 @@ view: flights {
     type: number
     sql: 1.0 * ${count_delayed_flights} / nullif(${count},0) ;;
     html: {{ rendered_value }} = {{ count_delayed_flights._rendered_value }} Delays / {{ count._rendered_value }} Total ;;
-    value_format_name: percent_2
+    value_format_name: percent_1
     drill_fields: [drill*]
   }
 
@@ -108,7 +109,7 @@ view: flights {
   dimension: flight_length {
     group_label: "Timing"
     type: number
-    sql: datediff(minute,${dep_raw}, ${arr_raw}) ;;
+    sql: datetime_diff(cast(${arr_raw} as datetime), cast(${dep_raw} as datetime), minute) ;;
   }
 
   dimension: flight_length_tier {
@@ -124,6 +125,7 @@ view: flights {
     type: average
     sql: ${flight_length} ;;
     drill_fields: [route_cities, flight_length, count]
+    value_format_name: decimal_1
   }
 
 #######################
@@ -147,21 +149,21 @@ view: flights {
   dimension: route {
     group_label: "Location / Distance"
     type: string
-    sql: ${origin} || '-' || ${destination}  ;;
+    sql: concat(${origin}, '-', ${destination})  ;;
     drill_fields: [origin, carriers.nickname, destination]
   }
 
   dimension: route_cities {
     group_label: "Location / Distance"
     type: string
-    sql: ${origin.city_full} || '-' || ${destination.city_full}  ;;
+    sql: concat(${origin.city_full}, '-', ${destination.city_full})  ;;
     drill_fields: [origin.city_full, carriers.nickname, destination.city_full]
   }
 
   dimension: route_full_name {
     group_label: "Location / Distance"
     type: string
-    sql: ${origin.full_name} || '-' || ${destination.full_name}  ;;
+    sql: concat(${origin.full_name}, '-', ${destination.full_name})  ;;
     drill_fields: [origin.full_name, carriers.nickname, destination.full_name]
   }
 
@@ -208,6 +210,7 @@ view: flights {
     type: average
     sql: ${route_distance} ;;
     drill_fields: [route_cities, route_distance, carriers.nickname, count]
+    value_format_name: decimal_1
   }
 
 #######################
@@ -232,6 +235,7 @@ view: flights {
     type: average
     sql: ${elevation_change_absolute} ;;
     drill_fields: [route_cities, origin.elevation, destination.elavation, carriers.nickname, count]
+    value_format_name: decimal_1
   }
 
 #######################

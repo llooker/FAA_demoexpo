@@ -54,8 +54,8 @@ view: destination {
   dimension: city_full {
     label: "City"
     type: string
-    sql: ${city} || ', ' || ${state} ;;
-    drill_fields: [state, full_name]
+    sql: concat(${city}, ', ', ${state}) ;;
+    drill_fields: [state, full_name, code]
   }
 
   dimension: cntl_twr {
