@@ -323,3 +323,32 @@ view: flights {
     ]
   }
 }
+
+# #######################
+# # Example 6: Custom Arrival Time Logic
+# #######################
+#
+#   dimension_group: arr_time_1 {
+#     group_label: "Arrival Time Logic"
+#     type: time
+#     timeframes: [
+#       raw,
+#       date
+#     ]
+#     sql: ${arr_raw} ;;
+#   }
+#
+#   dimension_group: arr_time_final {
+#     group_label: "Arrival Time Logic"
+#     type: time
+#     timeframes: [
+#       raw,
+#       date
+#     ]
+#     sql:
+#           case when ${flight_length} > 60 then DATETIME_ADD(cast(${arr_raw} as TIMESTAMP), INTERVAL 15 MINUTE)
+#               when ${flight_length} > 180 then DATETIME_ADD(cast(${arr_raw} as TIMESTAMP), INTERVAL 45 MINUTE)
+#               else ${arr_raw}
+#           end
+#      ;;
+#   }
