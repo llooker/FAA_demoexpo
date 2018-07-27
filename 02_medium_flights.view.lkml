@@ -128,6 +128,11 @@ view: flights {
     value_format_name: decimal_1
   }
 
+  measure: max_flight_length {
+    type: max
+    sql: ${flight_length} ;;
+  }
+
 #######################
 # Example 3: Route
 #######################
