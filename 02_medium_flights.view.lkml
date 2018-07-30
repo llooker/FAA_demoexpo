@@ -260,8 +260,8 @@ view: flights {
   }
 
   dimension: carrier {
-    # group_label: "General Info"
-    hidden: yes
+    group_label: "General Info"
+    label: "Carrier Code"
     type: string
     sql: ${TABLE}.carrier ;;
   }

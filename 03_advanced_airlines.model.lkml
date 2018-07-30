@@ -34,4 +34,10 @@ explore: advanced_flights {
     relationship: many_to_one
     sql_on: ${advanced_flights.carrier} = ${carriers.code} ;;
   }
+
+  join: values_by_carrier_by_origin {
+    relationship: many_to_one
+    sql_on:   ${advanced_flights.carrier} = ${values_by_carrier_by_origin.carrier}
+          AND ${advanced_flights.origin} = ${values_by_carrier_by_origin.origin};;
+  }
 }
