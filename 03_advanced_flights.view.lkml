@@ -17,7 +17,7 @@ view: advanced_flights {
     # dummy field used in next dim
     # hidden: yes
     type: number
-    group_label: "General Info"
+    view_label: "Advanced Features"
     description: "Only users with sufficient permissions will see this data"
     sql: cast(round(rand() * 10000, 0) as string) ;;
     html:
@@ -33,7 +33,7 @@ view: advanced_flights {
 #########################
 
   dimension: merged_carrier_code {
-    group_label: "General Info"
+    view_label: "Advanced Features"
     type: string
     sql:
         CASE
@@ -56,42 +56,51 @@ view: advanced_flights {
 
   measure: percent_flying_minutes_delayed {
     group_label: "Risk Score"
+    view_label: "Advanced Features"
     type: number
     sql: 1.0 * ${average_delay_length} / ${average_flight_length} ;;
     value_format_name: percent_2
+    drill_fields: [drill*]
   }
 
   ## Flights > 2 hours
 
   measure: count_flights_above_2_horus {
     group_label: "Risk Score"
+    view_label: "Advanced Features"
     type: count
     filters: {
       field: flight_length
       value: ">120"
     }
+    drill_fields: [drill*]
   }
 
   measure: percent_flights_above_2_hours {
     group_label: "Risk Score"
+    view_label: "Advanced Features"
     type: number
     sql: 1.0 * ${count_flights_above_2_horus} / nullif(${count},0) ;;
     value_format_name: percent_2
+    drill_fields: [drill*]
   }
 
   ## Establish weights
 
   parameter: weight_percent_flights_delayed {
+    view_label: "Advanced Features"
     type:  unquoted
     default_value: "4"
   }
 
   parameter: weight_percent_flight_minutes_delayed {
+    view_label: "Advanced Features"
     type:  unquoted
     default_value: "2"
   }
 
   parameter: weight_percent_flight_over_2_hours {
+    view_label: "Advanced Features"
     type:  unquoted
     default_value: "1"
   }
@@ -126,6 +135,7 @@ view: advanced_flights {
 
   dimension: risk_score_dimension {
     group_label: "Risk Score"
+    view_label: "Advanced Features"
     label: "Risk Score"
     type: number
     sql:
@@ -139,13 +149,16 @@ view: advanced_flights {
   }
 
   measure: average_risk_score {
+    view_label: "Advanced Features"
     group_label: "Risk Score"
     type: average
     sql: ${risk_score_dimension} ;;
     value_format_name: percent_2
+    drill_fields: [drill*]
   }
 
   dimension: is_above_risk_score_threshold {
+    view_label: "Advanced Features"
     group_label: "Risk Score"
     type: yesno
     sql:  ${risk_score_dimension} >
@@ -154,9 +167,11 @@ view: advanced_flights {
             when ${values_by_carrier_by_origin.count} BETWEEN 10000 and 50000 then .4
             when ${values_by_carrier_by_origin.count} < 10000 then .6
           end ;;
+    drill_fields: [origin, carrier]
   }
 
   measure: count_airports_above_threshold {
+    view_label: "Advanced Features"
     group_label: "Risk Score Threshold"
     type: count_distinct
     sql: ${origin} ;;
@@ -164,19 +179,34 @@ view: advanced_flights {
       field: is_above_risk_score_threshold
       value: "yes"
     }
+    drill_fields: [drill*]
   }
 
   measure: count_distinct_airports {
+    view_label: "Advanced Features"
     group_label: "Risk Score Threshold"
     type: count_distinct
     sql: ${origin} ;;
+    drill_fields: [drill*]
   }
 
   measure: percent_airports_above_threshold {
+    view_label: "Advanced Features"
     group_label: "Risk Score Threshold"
     type: number
     sql: 1.0 * ${count_airports_above_threshold} / NULLIF(${count_distinct_airports},0) ;;
     value_format_name: percent_2
+    drill_fields: [drill*]
+  }
+
+  set: drill {
+    fields: [
+      origin,
+      average_risk_score,
+      percent_flights_delayed_plain,
+      percent_flying_minutes_delayed,
+      percent_flights_above_2_hours
+    ]
   }
 
 

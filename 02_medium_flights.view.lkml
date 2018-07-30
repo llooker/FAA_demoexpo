@@ -2,7 +2,61 @@ view: flights {
   sql_table_name: faa.flights ;;
 
 #######################
-# Example 1: % of Delays
+# Example 1: Flight Length
+#######################
+
+  dimension_group: dep {
+    type: time
+    timeframes: [
+      raw,
+      hour_of_day,
+      day_of_month,
+      month_name,
+      date,
+      month,
+      year
+    ]
+    sql: ${TABLE}.dep_time ;;
+  }
+
+  dimension_group: arr {
+    type: time
+    timeframes: [
+      raw,
+      hour_of_day,
+      day_of_month,
+      month_name,
+      date,
+      month,
+      year
+    ]
+    sql: ${TABLE}.arr_time ;;
+  }
+
+  dimension: flight_length {
+    group_label: "Timing"
+    type: number
+    sql: datetime_diff(cast(${arr_raw} as datetime), cast(${dep_raw} as datetime), minute) ;;
+  }
+
+  dimension: flight_length_tier {
+    group_label: "Timing"
+    type: tier
+    sql: ${flight_length} ;;
+    tiers: [60,120,180]
+    style: integer
+    drill_fields: [flight_length]
+  }
+
+  measure: average_flight_length {
+    type: average
+    sql: ${flight_length} ;;
+    drill_fields: [route_cities, flight_length, count]
+    value_format_name: decimal_1
+  }
+
+#######################
+# Example 2: % of Delays
 #######################
 
 ## Define Delay
@@ -72,65 +126,6 @@ view: flights {
     # html: {{ rendered_value }} = {{ count_delayed_flights._rendered_value }} Delays / {{ count._rendered_value }} Total ;;
     value_format_name: percent_2
     drill_fields: [drill*]
-  }
-
-#######################
-# Example 2: Flight Length
-#######################
-
-  dimension_group: dep {
-    type: time
-    timeframes: [
-      raw,
-      hour_of_day,
-      day_of_month,
-      month_name,
-      date,
-      month,
-      year
-    ]
-    sql: ${TABLE}.dep_time ;;
-  }
-
-  dimension_group: arr {
-    type: time
-    timeframes: [
-      raw,
-      hour_of_day,
-      day_of_month,
-      month_name,
-      date,
-      month,
-      year
-    ]
-    sql: ${TABLE}.arr_time ;;
-  }
-
-  dimension: flight_length {
-    group_label: "Timing"
-    type: number
-    sql: datetime_diff(cast(${arr_raw} as datetime), cast(${dep_raw} as datetime), minute) ;;
-  }
-
-  dimension: flight_length_tier {
-    group_label: "Timing"
-    type: tier
-    sql: ${flight_length} ;;
-    tiers: [60,120,180]
-    style: integer
-    drill_fields: [flight_length]
-  }
-
-  measure: average_flight_length {
-    type: average
-    sql: ${flight_length} ;;
-    drill_fields: [route_cities, flight_length, count]
-    value_format_name: decimal_1
-  }
-
-  measure: max_flight_length {
-    type: max
-    sql: ${flight_length} ;;
   }
 
 #######################
