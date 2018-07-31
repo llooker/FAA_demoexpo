@@ -5,6 +5,8 @@ include: "*.dashboard.lookml"  # include all dashboards in this project
 
 explore: flights {
 
+  from: flights
+
   label: "Medium Flights"
 
   sql_always_where: ${flight_length} > 0 and ${flight_length} < 2000 ;;

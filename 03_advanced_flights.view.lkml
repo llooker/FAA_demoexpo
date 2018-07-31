@@ -14,12 +14,10 @@ view: advanced_flights {
   }
 
   dimension: pilot_ssn_hashed {
-    # dummy field used in next dim
-    # hidden: yes
     type: number
     view_label: "Advanced Features"
     description: "Only users with sufficient permissions will see this data"
-    sql: cast(round(rand() * 10000, 0) as string) ;;
+    sql: TO_BASE64(SHA1(${pilot_ssn})) ;;
     html:
       {% if _user_attributes["can_see_sensitive_data"]  == 'yes' %}
       {{ value }}
@@ -34,6 +32,7 @@ view: advanced_flights {
 
   dimension: merged_carrier_code {
     view_label: "Advanced Features"
+    description: "Accounts for American-US Air & Delta-NW Mergers"
     type: string
     sql:
         CASE
@@ -57,10 +56,16 @@ view: advanced_flights {
   measure: percent_flying_minutes_delayed {
     group_label: "Risk Score"
     view_label: "Advanced Features"
+    description: "Take average delay across flights as a percent of their total flight length"
     type: number
     sql: 1.0 * ${average_delay_length} / ${average_flight_length} ;;
     value_format_name: percent_2
     drill_fields: [drill*]
+    link: {
+      label: "More information here"
+      url: "https://drive.google.com/file/d/1Z-vnLla82zHQT0h1lrltTxJBx8dQduHU/view"
+      icon_url: "http://www.looker.com/favicon.ico"
+    }
   }
 
   ## Flights > 2 hours
@@ -83,6 +88,11 @@ view: advanced_flights {
     sql: 1.0 * ${count_flights_above_2_horus} / nullif(${count},0) ;;
     value_format_name: percent_2
     drill_fields: [drill*]
+    link: {
+      label: "More information here"
+      url: "https://drive.google.com/file/d/1Z-vnLla82zHQT0h1lrltTxJBx8dQduHU/view"
+      icon_url: "http://www.looker.com/favicon.ico"
+    }
   }
 
   ## Establish weights
@@ -137,6 +147,7 @@ view: advanced_flights {
     group_label: "Risk Score"
     view_label: "Advanced Features"
     label: "Risk Score"
+    description: "Lower is better; a weighted average of 3 KPIs: % Flights Delayed, % Flying Min Delayed, & % Flights > 2 Hours"
     type: number
     sql:
           (
@@ -146,20 +157,32 @@ view: advanced_flights {
       ) /   nullif(${sum_weights_dimension},0)
     ;;
     value_format_name: percent_2
+    link: {
+      label: "More information here"
+      url: "https://drive.google.com/file/d/1Z-vnLla82zHQT0h1lrltTxJBx8dQduHU/view"
+      icon_url: "http://www.looker.com/favicon.ico"
+    }
   }
 
   measure: average_risk_score {
     view_label: "Advanced Features"
     group_label: "Risk Score"
+    description: "Lower is better; a weighted average of 3 KPIs: % Flights Delayed, % Flying Min Delayed, & % Flights > 2 Hours"
     type: average
     sql: ${risk_score_dimension} ;;
     value_format_name: percent_2
     drill_fields: [drill*]
+    link: {
+      label: "More information here"
+      url: "https://drive.google.com/file/d/1Z-vnLla82zHQT0h1lrltTxJBx8dQduHU/view"
+      icon_url: "http://www.looker.com/favicon.ico"
+    }
   }
 
   dimension: is_above_risk_score_threshold {
     view_label: "Advanced Features"
     group_label: "Risk Score"
+    description: "Threshold depends on how popular that airport is - an airport with more traffic for a carrier is held to a higher standard"
     type: yesno
     sql:  ${risk_score_dimension} >
           case
@@ -208,13 +231,11 @@ view: advanced_flights {
       percent_flights_above_2_hours
     ]
   }
-
+}
 
 #########################
 #### Predictive Analytics
 #########################
-
-}
 
 #########################
 #### NDT
@@ -227,7 +248,7 @@ view: advanced_flights {
 view: values_by_carrier_by_origin {
   derived_table: {
     persist_for: "10 hours"
-    explore_source: advanced_flights {
+    explore_source: flights {
       column: carrier {}
       column: origin {}
       column: percent_flights_delayed {}
@@ -235,7 +256,7 @@ view: values_by_carrier_by_origin {
       column: percent_flights_above_2_hours {}
       column: count {}
       filters: {
-        field: advanced_flights.minutes_delayed
+        field: flights.minutes_delayed
         value: ">15"
       }
     }

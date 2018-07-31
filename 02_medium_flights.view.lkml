@@ -37,6 +37,7 @@ view: flights {
     group_label: "Timing"
     type: number
     sql: datetime_diff(cast(${arr_raw} as datetime), cast(${dep_raw} as datetime), minute) ;;
+    description: "Minutes between arrival and departure time (excludes taxi-time)"
   }
 
   dimension: flight_length_tier {
@@ -46,6 +47,7 @@ view: flights {
     tiers: [60,120,180]
     style: integer
     drill_fields: [flight_length]
+    description: "In Minutes"
   }
 
   measure: average_flight_length {
@@ -53,6 +55,7 @@ view: flights {
     sql: ${flight_length} ;;
     drill_fields: [route_cities, flight_length, count]
     value_format_name: decimal_1
+    description: "In Minutes"
   }
 
 #######################
@@ -108,24 +111,30 @@ view: flights {
 
   measure: percent_flights_delayed {
     type: number
+    description: "Count of Delayed Flights out of Total Flights"
     sql: 1.0 * ${count_delayed_flights} / nullif(${count},0) ;;
     html: {{ rendered_value }} = {{ count_delayed_flights._rendered_value }} Delays / {{ count._rendered_value }} Total ;;
     value_format_name: percent_1
+    link: {
+      label: "More information here"
+      url: "https://drive.google.com/file/d/1Z-vnLla82zHQT0h1lrltTxJBx8dQduHU/view"
+      icon_url: "http://www.looker.com/favicon.ico"
+    }
     drill_fields: [drill*]
   }
 
-#   measure: percentile_of_delays {
-#     type: percentile
-#     sql: ${percent_flights_delayed} ;;
-#   }
-
   measure: percent_flights_delayed_plain {
-    label: "Percent Flights Delayed (No Help Text)"
+    label: "Percent Flights Delayed (# Only)"
+    description: "Count of Delayed Flights out of Total Flights"
     type: number
-    sql: 1.0 * ${count_delayed_flights} / nullif(${count},0) ;;
-    # html: {{ rendered_value }} = {{ count_delayed_flights._rendered_value }} Delays / {{ count._rendered_value }} Total ;;
+    sql: ${percent_flights_delayed};;
     value_format_name: percent_2
     drill_fields: [drill*]
+    link: {
+      label: "More information here"
+      url: "https://drive.google.com/file/d/1Z-vnLla82zHQT0h1lrltTxJBx8dQduHU/view"
+      icon_url: "http://www.looker.com/favicon.ico"
+    }
   }
 
 #######################
@@ -155,6 +164,7 @@ view: flights {
 
   dimension: route_cities {
     group_label: "Location / Distance"
+    hidden: yes
     type: string
     sql: concat(${origin.city_full}, '-', ${destination.city_full})  ;;
     drill_fields: [origin.city_full, carriers.nickname, destination.city_full]
@@ -163,6 +173,7 @@ view: flights {
   dimension: route_full_name {
     group_label: "Location / Distance"
     type: string
+    hidden: yes
     sql: concat(${origin.full_name}, '-', ${destination.full_name})  ;;
     drill_fields: [origin.full_name, carriers.nickname, destination.full_name]
   }
@@ -195,6 +206,7 @@ view: flights {
     end_location_field: destination_location
     units: miles
     drill_fields: [distance_tiers]
+    description: "In Miles"
   }
 
   dimension: distance_tiers {
@@ -204,6 +216,7 @@ view: flights {
     style: integer
     sql: ${route_distance} ;;
     drill_fields: [route_distance]
+    description: "In Miles"
   }
 
   measure: average_distance {
@@ -211,6 +224,7 @@ view: flights {
     sql: ${route_distance} ;;
     drill_fields: [route_cities, route_distance, carriers.nickname, count]
     value_format_name: decimal_1
+    description: "In Miles"
   }
 
 #######################
@@ -222,6 +236,7 @@ view: flights {
     type: number
     sql: ${destination.elevation} - ${origin.elevation} ;;
     drill_fields: [route]
+    description: "In Miles"
   }
 
   dimension: elevation_change_absolute {
@@ -236,6 +251,7 @@ view: flights {
     sql: ${elevation_change_absolute} ;;
     drill_fields: [route_cities, origin.elevation, destination.elavation, carriers.nickname, count]
     value_format_name: decimal_1
+    description: "In Miles"
   }
 
 #######################
