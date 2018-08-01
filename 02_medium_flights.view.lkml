@@ -70,15 +70,15 @@ view: flights {
     sql: ${TABLE}.dep_delay ;;
   }
 
-  filter: minutes_delayed {
+  parameter: minutes_delayed {
     type: number
-    default_value: ">5"
+    default_value: "15"
   }
 
   dimension: is_flight_delayed {
     group_label: "Timing"
     type: yesno
-    sql:{% condition minutes_delayed %} ${dep_delay} {% endcondition %} ;;
+    sql: ${dep_delay} >= {% parameter minutes_delayed %} ;;
     drill_fields: [route_cities, distance_tiers]
   }
 

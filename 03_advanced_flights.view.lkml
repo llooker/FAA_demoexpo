@@ -17,7 +17,12 @@ view: advanced_flights {
     type: number
     view_label: "Advanced Features"
     description: "Only users with sufficient permissions will see this data"
-    sql: TO_BASE64(SHA1(${pilot_ssn})) ;;
+    sql:
+        CASE
+          WHEN '{{_user_attributes["can_see_sensitive_data"]}}' = 'yes'
+                THEN ${pilot_ssn}
+                ELSE TO_BASE64(SHA1(${pilot_ssn}))
+          END ;;
     html:
       {% if _user_attributes["can_see_sensitive_data"]  == 'yes' %}
       {{ value }}
@@ -231,11 +236,76 @@ view: advanced_flights {
       percent_flights_above_2_hours
     ]
   }
-}
+
 
 #########################
 #### Predictive Analytics
 #########################
+
+  dimension: slope {
+    group_label: "Predictive Analytics"
+    view_label: "Advanced Features"
+    type: number
+    sql: -0.102 ;;
+  }
+
+  dimension: yintercept {
+    group_label: "Predictive Analytics"
+    view_label: "Advanced Features"
+    type: number
+    sql: 0.178 ;;
+  }
+
+  dimension: predicted_percent_delayed_flights {
+    group_label: "Predictive Analytics"
+    view_label: "Advanced Features"
+    type: number
+    sql: ${slope} * ${values_by_carrier_by_origin.percent_flying_minutes_delayed} + ${yintercept} ;;
+    value_format_name: percent_2
+  }
+
+  dimension: actual_percent_delayed_flights {
+    group_label: "Predictive Analytics"
+    view_label: "Advanced Features"
+    value_format_name: percent_2
+    type: number
+    sql: ${values_by_carrier_by_origin.percent_flights_delayed} ;;
+  }
+
+  dimension: prediction_residual {
+    group_label: "Predictive Analytics"
+    view_label: "Advanced Features"
+    type: number
+    sql: abs(${actual_percent_delayed_flights} - ${predicted_percent_delayed_flights}) ;;
+    value_format_name: percent_2
+  }
+
+  measure: avg_predicted_percent_delayed_flights {
+    group_label: "Predictive Analytics"
+    view_label: "Advanced Features"
+    type: average
+    sql: ${predicted_percent_delayed_flights} ;;
+    value_format_name: percent_2
+  }
+
+  measure: avg_actual_percent_delayed_flights {
+    group_label: "Predictive Analytics"
+    view_label: "Advanced Features"
+    value_format_name: percent_2
+    type: average
+    sql: ${actual_percent_delayed_flights} ;;
+  }
+
+  measure: avg_prediction_residual {
+    group_label: "Predictive Analytics"
+    view_label: "Advanced Features"
+    type: average
+    sql: ${prediction_residual} ;;
+    value_format_name: percent_2
+  }
+
+}
+
 
 #########################
 #### NDT
@@ -257,7 +327,7 @@ view: values_by_carrier_by_origin {
       column: count {}
       filters: {
         field: flights.minutes_delayed
-        value: ">15"
+        value: "15"
       }
     }
   }
@@ -278,14 +348,14 @@ view: values_by_carrier_by_origin {
   }
   dimension: percent_flights_delayed {
     hidden: yes
-    label: "1 - Flights Percent Flights Delayed"
-    value_format: "#,##0.0%"
+    label: "Actual Percent Flight Delayed"
+    value_format_name: percent_2
     type: number
   }
   dimension: percent_flying_minutes_delayed {
     hidden: yes
-    label: "1 - Flights Percent Flying Minutes Delayed"
-    value_format: "#,##0.00%"
+    label: "Percent Flying Minutes Delayed"
+    value_format_name: percent_2
     type: number
   }
   dimension: percent_flights_above_2_hours {
@@ -295,8 +365,8 @@ view: values_by_carrier_by_origin {
     type: number
   }
   dimension: count {
-    hidden: yes
-    label: "1 - Flights Count"
+    # hidden: yes
+    label: "Origin Airport Count"
     type: number
   }
 }

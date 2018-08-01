@@ -14,7 +14,7 @@ view: hello_world_flights {
   dimension: route {
     type: string
     sql: concat(${origin}, '-', ${destination})  ;;
-    drill_fields: [origin, destination]
+    drill_fields: [origin, destination, carrier]
   }
 
   dimension: carrier {
